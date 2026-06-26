@@ -1,0 +1,13 @@
+# Środowisko wirtualne Pythona
+venv/
+.venv/
+
+# Pliki środowiskowe z sekretami
+Backend/.env
+
+# Pliki tymczasowe / skompilowane Pythona
+**/__pycache__/
+**/*.pyc
+
+# Lokalna baza danych
+Backend/db.sqlite3
