@@ -22,14 +22,28 @@ class CartAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
+
         cart = RedisCart(request.user.id)
         items = cart.get_items()
         return Response(items)
 
     def post(self, request):
+
         product_id = request.data.get("product_id")
         if not product_id:
-            return Response({"message": "Product ID is required"})
+            return Response(
+                {"message": "Product ID is required"},
+                status=status.HTTP_400_BAD_REQUEST
+                )
+        # Check if product exists
+        try:
+            product = Product.objects.get(pk=product_id)
+        except Product.DoesNotExist:
+            return Response({"message": "Product not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        # Check if product is physical (not digital) and out of stock
+        if not product.is_digital and product.stock_status <= 0:
+            return Response({"message": "Product is out of stock"}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             quantity = int(request.data.get("quantity", 1))
@@ -99,7 +113,6 @@ class OrderCreateAPIView(APIView):
                 order.save()
 
                 # Clear the cart
-                cart.clear()
                 # For stripe session
                 try:
                     # Round to nearest whole number - converting ZŁ -> GROSZÓWKI  
@@ -112,8 +125,8 @@ class OrderCreateAPIView(APIView):
                     payment_method_types = ['card'],
                     mode = 'payment',
                     client_reference_id = str(order.id),
-                    success_url = 'http://localhost:8000/success',
-                    cancel_url = 'http://localhost:8000/cancel',
+                    success_url = 'http://localhost:8000/success/',
+                    cancel_url = 'http://localhost:8000/cancel/',
                     line_items = [
                         {'price_data': {
                             'currency': 'pln',
@@ -125,6 +138,9 @@ class OrderCreateAPIView(APIView):
                         'quantity': 1,}
                     ]
                 )
+
+                # Clear the cart (only after successful creation of session)
+                cart.clear()
 
                 serializer = OrderSerializer(order)
                 return Response(
@@ -145,8 +161,9 @@ class OrderCreateAPIView(APIView):
 @permission_classes([AllowAny])
 def stripe_webhook(request):
     payload = request.body
-
-    sig_header = request.META['HTTP_STRIPE_SIGNATURE']
+    # method .get() to avoid error 500 when the header is missing,
+    # it gives None instead of error
+    sig_header = request.META.get('HTTP_STRIPE_SIGNATURE')
     if not sig_header:
         return Response({"error": "Missing signature header"}, status=status.HTTP_400_BAD_REQUEST)
 
