@@ -12,6 +12,10 @@ from rest_framework import status
 import stripe
 from django.conf import settings
 
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
+
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
 class CartAPIView(APIView):
@@ -38,10 +42,13 @@ class CartAPIView(APIView):
 
     def delete(self, request):
         product_id = request.data.get("product_id")
+        if not product_id:
+            return Response({"message": "Product ID is required"}, status=status.HTTP_400_BAD_REQUEST)
+
         cart = RedisCart(request.user.id)
         if cart.remove_item(product_id):
             return Response({"message": "Product removed from cart"})
-        return Response({"message": "Product not found in cart"})
+        return Response({"message": f"Product {product_id} not found in cart"}, status=status.HTTP_404_NOT_FOUND)
 
 class OrderCreateAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -133,4 +140,43 @@ class OrderCreateAPIView(APIView):
             except Exception as e:
                 return Response({"message": f"An error occurred: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-                
+@csrf_exempt
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def stripe_webhook(request):
+    payload = request.body
+
+    sig_header = request.META['HTTP_STRIPE_SIGNATURE']
+    if not sig_header:
+        return Response({"error": "Missing signature header"}, status=status.HTTP_400_BAD_REQUEST)
+
+    endpoint_secret = settings.STRIPE_WEBHOOK_SECRET
+    event = None
+
+    try:
+        event = stripe.Webhook.construct_event(
+            payload, 
+            sig_header, 
+            endpoint_secret
+            )
+    except ValueError as e:
+        # Invalid payload
+        return Response({"error": "Invalid payload"}, status=status.HTTP_400_BAD_REQUEST)
+    except stripe.error.SignatureVerificationError as e:
+        # Invalid signature
+        return Response({"error": "Invalid signature"}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Handling the successful payment event
+    if event['type'] == 'checkout.session.completed':
+        session = event['data']['object']
+
+        # Retrieve the order
+        order_id = session.client_reference_id
+        try:
+            order = Order.objects.get(pk=order_id)
+            order.status = 'paid'
+            order.save()
+        except Order.DoesNotExist:
+            return Response({"error": "Order not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    return Response({"success": True}, status=status.HTTP_200_OK)
