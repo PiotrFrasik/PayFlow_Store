@@ -18,12 +18,20 @@ from django.contrib import admin
 from django.urls import path, include
 from django.views.generic import RedirectView
 from django.http import HttpResponse
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 urlpatterns = [
     path('', RedirectView.as_view(url='/api/', permanent=False)),
     path('admin/', admin.site.urls),
+
     path('api/', include('products.urls')),
     path('api/orders/', include('orders.urls')),
+
+     # Swagger
+    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+    path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+
+    # Success and Cancel paths for Stripe
     path('success/', lambda request: HttpResponse('Payment successful'), name='payment-success'),
     path('cancel/', lambda request: HttpResponse('Payment failed'), name='payment-cancel'),
 ]

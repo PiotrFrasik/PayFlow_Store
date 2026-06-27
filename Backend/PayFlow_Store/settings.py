@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'products',
     'orders',
+    'drf_spectacular'
 ]
 
 MIDDLEWARE = [
@@ -122,3 +123,14 @@ STATIC_URL = 'static/'
 
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
 STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET")
+
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'PayFlow Store API',
+    'DESCRIPTION': 'Zaawansowany system e-commerce z obsługą koszyka w Redisie i płatnościami Stripe.',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+}

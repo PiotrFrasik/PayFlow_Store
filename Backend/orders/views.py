@@ -3,7 +3,7 @@ from rest_framework.decorators import permission_classes
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from .serializers import OrderSerializer, OrderItemSerializer
+from .serializers import OrderSerializer
 from .models import Order, OrderItem
 from products.models import Product
 from django.db import transaction
