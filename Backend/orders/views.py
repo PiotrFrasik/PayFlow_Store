@@ -9,6 +9,11 @@ from products.models import Product
 from django.db import transaction
 from rest_framework import status
 
+import stripe
+from django.conf import settings
+
+stripe.api_key = settings.STRIPE_SECRET_KEY
+
 class CartAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -88,9 +93,39 @@ class OrderCreateAPIView(APIView):
 
                 # Clear the cart
                 cart.clear()
+                # For stripe session
+                try:
+                    # Round to nearest whole number - converting ZŁ -> GROSZÓWKI  
+                    calculated_total_price = int(calculated_total_price*100)
+                except ValueError as e:
+                    return Response({"message": f"Error processing payment: {str(e)}"}, status=status.HTTP_400_BAD_REQUEST)
+
+                # Stripe Integration
+                session = stripe.checkout.Session.create(
+                    payment_method_types = ['card'],
+                    mode = 'payment',
+                    client_reference_id = str(order.id),
+                    success_url = 'http://localhost:8000/success',
+                    cancel_url = 'http://localhost:8000/cancel',
+                    line_items = [
+                        {'price_data': {
+                            'currency': 'pln',
+                            'product_data': {
+                                'name': f"Order #{order.id}",
+                            },
+                            'unit_amount': calculated_total_price, 
+                        },
+                        'quantity': 1,}
+                    ]
+                )
 
                 serializer = OrderSerializer(order)
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
+                return Response(
+                    {"order": serializer.data,
+                     'checkout_data': session.url},
+                     status=status.HTTP_201_CREATED
+                    )
+
             except Product.DoesNotExist:
                 return Response({"message": "Product not found"}, status=status.HTTP_404_NOT_FOUND)
             except ValueError as e:
