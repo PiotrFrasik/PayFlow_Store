@@ -15,6 +15,8 @@ from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
+# Import tasks for celery
+from .tasks import send_order_confirmation_email
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
@@ -193,6 +195,10 @@ def stripe_webhook(request):
             order = Order.objects.get(pk=order_id)
             order.status = 'paid'
             order.save()
+
+            # Send email using Celery
+            send_order_confirmation_email.delay(order.id)
+            
         except Order.DoesNotExist:
             return Response({"error": "Order not found"}, status=status.HTTP_404_NOT_FOUND)
 
