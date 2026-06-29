@@ -37,7 +37,7 @@ cd Backend
 python -m venv venv
 ```
 
-2. Activate the virtual environment and nstall the required dependencies:
+2. Activate the virtual environment and install the required dependencies:
 ```bash
 pip install -r requirements.txt
 ```
