@@ -140,6 +140,10 @@ class OrderCreateAPIView(APIView):
                         'quantity': 1,}
                     ]
                 )
+                
+                # Save stripe session ID to the order
+                order.stripe_session_id = session.id
+                order.save()
 
                 # Clear the cart (only after successful creation of session)
                 cart.clear()
@@ -193,6 +197,11 @@ def stripe_webhook(request):
         order_id = session.client_reference_id
         try:
             order = Order.objects.get(pk=order_id)
+            
+            # Idempotency check: if order is already paid, exit early
+            if order.status == 'paid':
+                return Response({"success": True, "message": "Order already processed"}, status=status.HTTP_200_OK)
+
             order.status = 'paid'
             order.save()
 
