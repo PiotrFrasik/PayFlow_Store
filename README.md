@@ -29,53 +29,39 @@ A simple e-commerce backend API built with Django. It uses Redis for the shoppin
 
 ---
 
-## Setup & Run
+## Setup & Run (Docker Workflow)
 
-1. Navigate to the `Backend` directory and create a Python virtual environment:
-```bash
-cd Backend
-python -m venv venv
-```
+The entire application runs inside Docker (Django, Celery, Redis, and Postgres).
 
-2. Activate the virtual environment and install the required dependencies:
+1. **Set up Environment Variables:**
+Navigate to the `Backend` directory and copy the `.env.example` to `.env`:
 ```bash
-pip install -r requirements.txt
+cp Backend/.env.example Backend/.env
 ```
-
-3. Copy `.env.example` to `.env` in the `Backend/` directory and configure your Stripe developer keys:
-```bash
-cp .env.example .env
-```
-Update the keys in `.env`:
+Update the keys in `Backend/.env`:
 ```env
 STRIPE_SECRET_KEY=sk_test_...
 STRIPE_WEBHOOK_SECRET=whsec_...
 ```
 
-4. Start the Docker containers for Redis and Postgres:
+2. **Start the Application:**
+Run the following command in the root directory (where `docker-compose.yml` is located) to build and start all services:
 ```bash
-docker compose up -d
+docker compose up --build
 ```
 
-5. Database Migrations
-Run the database migrations inside the `Backend/` folder:
+3. **Database Setup:**
+While the containers are running, open a new terminal and run migrations:
 ```bash
-python manage.py migrate
+docker compose exec web python manage.py migrate
 ```
-
-6. Create a superuser account to access the admin panel:
+Create a superuser account for the admin panel:
 ```bash
-python manage.py createsuperuser
+docker compose exec web python manage.py createsuperuser
 ```
-
-7. Start the Django development server:
+4. **Installing venv for IDE (optional):**
 ```bash
-python manage.py runserver
+py -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install django djangorestframework stripe redis celery
 ```
-
-In a new terminal window, activate the virtual environment and start the Celery worker process to handle background tasks (e.g., sending emails):
-```bash
-celery -A PayFlow_Store worker --loglevel=info -P threads
-```
-
-> **Note on Emails:** During local development, emails are printed directly to the Django server console (`EmailBackend`).
