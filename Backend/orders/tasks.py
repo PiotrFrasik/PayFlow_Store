@@ -2,11 +2,12 @@ import logging
 from celery import shared_task
 from django.core.mail import send_mail
 from .models import Order
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 @shared_task(bind=True, autoretry_for=(Exception,), retry_backoff=True, retry_backoff_max=600, max_retries=3)
-def send_order_confirmation_email(self, order_id):
+def send_order_confirmation_email(self: Any, order_id: int) -> str:
     try:
         order = Order.objects.get(pk=order_id)
 
