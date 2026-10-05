@@ -2,10 +2,10 @@ from rest_framework import serializers
 from .models import Order, OrderItem
 
 class OrderItemSerializer(serializers.ModelSerializer):
-    totalPrice = serializers.ReadOnlyField(source='get_total_price')
+    total_price = serializers.ReadOnlyField(source='get_total_price')
     class Meta:
         model = OrderItem
-        fields = ["id", "product", "price", "quantity", "totalPrice"]
+        fields = ["id", "product", "price", "quantity", "total_price"]
 
 class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True,
