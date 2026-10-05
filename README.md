@@ -42,7 +42,11 @@ python -m venv venv
 pip install -r requirements.txt
 ```
 
-3. Create a `.env` file in the `Backend/` directory and configure your Stripe developer keys:
+3. Copy `.env.example` to `.env` in the `Backend/` directory and configure your Stripe developer keys:
+```bash
+cp .env.example .env
+```
+Update the keys in `.env`:
 ```env
 STRIPE_SECRET_KEY=sk_test_...
 STRIPE_WEBHOOK_SECRET=whsec_...
