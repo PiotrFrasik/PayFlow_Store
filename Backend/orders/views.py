@@ -3,6 +3,7 @@ from rest_framework.decorators import permission_classes
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.request import Request
 from .serializers import OrderSerializer
 from .models import Order, OrderItem
 from products.models import Product
@@ -23,13 +24,13 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 class CartAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self, request):
+    def get(self, request: Request) -> Response:
 
         cart = RedisCart(request.user.id)
         items = cart.get_items()
         return Response(items)
 
-    def post(self, request):
+    def post(self, request: Request) -> Response:
 
         product_id = request.data.get("product_id")
         if not product_id:
@@ -56,7 +57,7 @@ class CartAPIView(APIView):
         cart.add(product_id, quantity)
         return Response({"message": "Product added to cart"})
 
-    def delete(self, request):
+    def delete(self, request: Request) -> Response:
         product_id = request.data.get("product_id")
         if not product_id:
             return Response({"message": "Product ID is required"}, status=status.HTTP_400_BAD_REQUEST)
@@ -69,7 +70,7 @@ class CartAPIView(APIView):
 class OrderCreateAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def post(self, request):
+    def post(self, request: Request) -> Response:
         cart = RedisCart(request.user.id)
         items = cart.get_items()
 
@@ -165,7 +166,7 @@ class OrderCreateAPIView(APIView):
 @csrf_exempt
 @api_view(['POST'])
 @permission_classes([AllowAny])
-def stripe_webhook(request):
+def stripe_webhook(request: Request) -> Response:
     payload = request.body
     # method .get() to avoid error 500 when the header is missing,
     # it gives None instead of error
