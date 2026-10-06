@@ -4,6 +4,16 @@ A simple e-commerce backend API built with Django. It uses Redis for the shoppin
 
 ---
 
+## Running Tests
+
+The project includes a robust suite of automated tests covering the cart logic, order creation, and webhook security. To execute the tests inside the Docker container, run:
+
+```bash
+docker compose exec web python manage.py test
+```
+
+---
+
 ## API Endpoints
 
 ### Auth
@@ -63,5 +73,5 @@ docker compose exec web python manage.py createsuperuser
 ```bash
 py -m venv .venv
 .\.venv\Scripts\Activate.ps1
-pip install django djangorestframework stripe redis celery
+pip install -r Backend/requirements.txt
 ```
