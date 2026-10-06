@@ -148,7 +148,7 @@ SIMPLE_JWT = {
 
 SPECTACULAR_SETTINGS = {
     'TITLE': 'PayFlow Store API',
-    'DESCRIPTION': 'Zaawansowany system e-commerce z obsługą koszyka w Redisie i płatnościami Stripe.',
+    'DESCRIPTION': 'A simple e-commerce backend API built with Django. It uses Redis for the shopping cart, Celery for sending emails, and Stripe to handle payments.',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
 }
