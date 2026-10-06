@@ -1,12 +1,10 @@
-from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 from unittest.mock import patch
 from django.contrib.auth.models import User
 
-
-from orders.models import Order, OrderItem
+from orders.models import Order
 from products.models import Product
 
 class OrderAPITest(APITestCase):
@@ -79,6 +77,3 @@ class OrderAPITest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         self.assertEqual(response.data['order']['status'], Order.OrderStatus.PENDING)
-
-
-

@@ -4,7 +4,6 @@ from rest_framework.test import APITestCase
 from unittest.mock import patch
 from django.contrib.auth.models import User
 
-from orders.models import Order, OrderItem
 from products.models import Product
 
 class CartAPITest(APITestCase):
