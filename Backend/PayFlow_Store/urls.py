@@ -27,7 +27,7 @@ from rest_framework_simplejwt.views import (
 urlpatterns = [
     path('', RedirectView.as_view(url='/api/docs/', permanent=False)),
     path('api/', RedirectView.as_view(url='/api/docs/', permanent=False)),
-    #path('admin/', admin.site.urls),
+    path('admin/', admin.site.urls),
 
     path('api/products/', include('products.urls')),
     path('api/orders/', include('orders.urls')),
